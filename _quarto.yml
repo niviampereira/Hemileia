@@ -1,0 +1,43 @@
+project:
+  type: website
+  output-dir: docs
+  
+execute: 
+  cache: true
+  freeze: auto
+
+website:
+  favicon: imgs/favicon2.png
+
+navbar:
+  title: Biocontrole da Ferrugem do cafeeiro
+  pinned: true
+  logo: imgs/logo.png
+  left:
+  - text: About
+    icon: fa fa-home
+    href: index.qmd
+  - text: Obtenção dos dados
+    icon: fa fa-table
+    href: about.qmd
+  - text: Análise
+    icon: fa fa-file-code-o
+    href: T_Hemileia.qmd
+  
+  right: 
+     - icon: github
+       href: https://github.com/niviampereira
+
+  page-navigation: true
+  page-footer: 
+    left: "Copyright 2023, Nívia Maria Pereira"
+    
+    
+format:
+  html:
+    theme: sandstone
+    css: styles.css
+    toc: true
+
+editor: visual
+

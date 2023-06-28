@@ -1,0 +1,589 @@
+---
+title: "Análise biocontrole de Hemileia vastatrix"
+author: "Nívia"
+format: html
+editor: visual
+---
+
+# Introdução
+
+Um experimento com trezentas plantas de café foi montado para testar o efeito de isolados fúngicos encontrados associados a pústulas de *Hemileia vastatrix* no controle da ferrugem do cafeeiro. Foram obtidos dados de **severidade** da doença, avaliados em 4 tempos diferentes - 30, 45, 60 e 75 dias após a inoculação (dai) e, no final do experimento, avalio-use a **incidência** da doença e a **altura das plantas**. Neste trabalho, analisou-se 19 dos 20 tratamentos testados no experimento.
+
+# Objetivo e hipótese geral
+
+Por meio da análise dos dados, objetivou-se determinar quais tratamentos testados para controle biológico de *Hemileia vastatrix* apresenta o melhor desempenho no controle da doença, considerando as variáveis resposta severidade, incidência e altura de plantas. Diante disso, a hipótese geral é de que existe diferença significativa entre os tratamentos em relação ao controle da doença.
+
+## Hipóteses testadas
+
+-   **Hipótese nula (H0):** Não há diferença significativa entre os tratamentos. A média da eficiência dos tratamentos no controle da doença é igual para todos os tratamentos.
+
+-   **Hipótese alternativa (Ha):** Pelo menos um dos tratamentos apresenta um desempenho significativamente melhor no controle da doença, em comparação com os demais.
+
+# Análise das variáveis resposta
+
+As variáveis resposta foram aqui analisadas uma por vez para uma melhor compreensão do processo de análise.
+
+## Severidade da doença
+
+### Preparo pré-análise
+
+**Pacotes:** todos os pacotes utilizados no processo de análise das variáveis foram carregados previamente e utilizados no momento oportuno.
+
+```{r}
+#| warning: false
+#| message: false
+library(tidyverse)
+library(googlesheets4)
+library(gsheet)
+library(dplyr)
+library(ggplot2)
+library(performance)
+library(DHARMa)
+library(ExpDes.pt)
+library(agricolae)
+library(epifitter)
+```
+
+**Importação dos dados:** como o data frame contendo os dados de severidade estão localizados em uma uma planilha do Google Sheets, para realizar a importação dos dados necessitou-se utilizar a função `gsheet2tbl` do pacote `googlesheets4`. O data frame foi atribuído ao objeto denominado `controle`.
+
+```{r}
+controle <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1bw5wWl5dZHis32FU8C60o1xT4HbXqeC9/edit#gid=2004591437")
+head(controle)
+```
+
+### Análise exploratória dos dados
+
+Usando o pacote `ggplot2`, foi explorado visualmente, por meio de diferentes gráficos, os dados de severidade da doença.
+
+**Gráfico de pontos:** primeiramente, visualizou-se a severidade por meio de um gráfico de pontos básico. Como tem muitos pontos, para evitar sobreposição, foi usado a função `geom_jitter`, a qual promoveu a desagregação dos pontos no gráfico. Dentro desta função, definiu-se o tamanho e a quantidade de deslocamento dos pontos.
+
+```{r}
+controle |>
+  ggplot(aes(tempo_dai, sev,
+             color = trat))+
+  geom_jitter(size = 2, width = 2)+
+  theme_bw()+
+  labs(title="", x="Time (days after inoculation)", y = "Disease severity (%)", color = "Treatments")+
+scale_y_continuous(breaks = seq(0, 40, 5), limits = c(0, 40))+
+scale_x_continuous(breaks = seq(0, 75, 15), limits = c(0, 75))
+```
+
+**Gráfico de pontos e linhas:** buscando uma melhor compreensão visual dos dados, uma nova abordagem foi realizada. Os dados foram agrupados, utilizando a função `group_by`, pelos tratamentos (trat) e tempo de avaliação (tempo_dai). Em seguida, calculou-se a média e o desvio padrão da variável resposta (sev) utilizando a função `summarise`. Após isso, realizou-se a plotagem do gráfico usando pontos, linhas e barra de erro para visualizar a evolução da severidade da doença ao longo do tempo, sendo cada tratamento representado por cores distintas. Para este gráfico, uma paleta de cores específica foi escolhida para os pontos e linhas ( argumento `scale_color e scale_fill_viridis`).
+
+```{r}
+#| warning: false
+#| message: false
+controle2 <- controle |>
+  group_by(trat, tempo_dai) |>
+  summarise(sev_mean = mean(sev),
+            sev_sd = sd(sev)) 
+
+controle2 |>
+  ggplot(aes(tempo_dai, sev_mean,
+             color = trat))+
+  geom_line(aes(group = trat, color = trat), size = 1)+
+  geom_point(aes(fill = trat), shape = 21, size = 2)+
+  scale_color_viridis_d(option = "D")+
+  scale_fill_viridis_d(option = "D")+
+  theme_bw()+
+   geom_errorbar(aes(ymin = sev_mean-sev_sd, ymax = sev_mean+sev_sd), width=0, alpha = 1)+
+  labs(title="", x="Time (days after inoculation)", y = "Disease severity (%)")+
+scale_y_continuous(breaks = seq(0, 25, 5), limits = c(0, 25))+
+scale_x_continuous(breaks = seq(0, 75, 15), limits = c(0, 75))
+```
+
+**Adição de facetas:** para visualizar separadamente os tratamentos, realizamos a adição de facetas com a função `facet_wrap`.
+
+```{r}
+controle2 |>
+  ggplot(aes(tempo_dai, sev_mean,
+             color = trat))+
+  geom_line(aes(group = trat, color = trat), size = 1)+
+  geom_point(aes(fill = trat), shape = 21, size = 2)+
+  facet_wrap(~trat)+
+scale_color_viridis_d(option = "D")+
+  scale_fill_viridis_d(option = "D")+
+  theme_bw()+
+   geom_errorbar(aes(ymin = sev_mean-sev_sd, ymax = sev_mean+sev_sd), width=0, alpha = 1)+
+  labs(title="", x="Time (days after inoculation)", y = "Disease severity (%)")+
+scale_y_continuous(breaks = seq(0, 25, 5), limits = c(0, 25))+
+scale_x_continuous(breaks = seq(0, 75, 15), limits = c(0, 75))
+```
+
+Na análise individual, é possível ver que alguns tratamentos apresentam um desvio padrão alto, o que indica que os valores estão mais afastados da média e os dados possuem alta variabilidade.
+
+**Boxplot da severidade final:** após visualizar a severidade com todos os tempos de avaliação, selecionou-se apenas a severidade final para plotar no boxplot.
+
+```{r}
+sevf <- controle |>
+  filter(tempo_dai == 75)
+
+sevf |> 
+  ggplot(aes(trat, sev))+
+  geom_jitter(shape = 1, size = 1.5)+
+  geom_boxplot(fill = NA, size = .7)+
+  theme_bw()+
+  scale_y_continuous(breaks = seq(0, 37, 5), limits = c(0, 37))+
+  labs(x = "",
+       y = "Final severity (%)")
+```
+
+Por meio deste gráfico, é possível ter uma visão mais clara e distinguir quais tratamentos possibilitaram uma maior severidade da doença ao final do experimento. Considerando apenas a análise visual, os tratamentos AT, HI, BI e 58 são os piores no controle da doença, pois apresentaram maior severidade final.
+
+### Análise estatística e teste de hipóteses
+
+-   Hipótese nula (H0): a severidade da doença é igual para todos os tratamentos estudados.
+
+-   Hipótese alternativa (Ha): pelo menos um dos tratamentos estudados apresenta uma severidade média menor do que a média dos demais tratamentos.
+
+**Análise de variância (ANOVA):**
+
+Para a realização da ANOVA, apenas o último tempo de avaliação de severidade (75 dai) foi considerado, então a análise de variância foi baseada na severidade final da doença. Para evitar erros, todas as células com valor ausente foram filtradas. Além disso, para ser lido e contabilizado corretamente na tabela de ANOVA, o bloco precisou ser transformado em fator. A análise de variância foi realizada utilizando a função `aov`, a qual faz parte do pacote base do R.
+
+```{r}
+c2 <- controle |>
+  filter(tempo_dai == 75) |>
+  filter(sev != "NA")
+
+c2$bloco = as.factor(c2$bloco)
+
+aov_c2 <- aov(sev ~ trat*tempo_dai + factor(bloco), data = c2)
+
+summary(aov_c2)
+
+```
+
+Baseado na tabela de anova, interpreta-se que, como os valores de p (p-valor) foram menores que o nível de significância (0,05), a hipótese nula deve ser rejeitada e a hipótese alternativa aceita. Conclui-se então que existe evidência de que pelo menos um dos tratamentos apresenta diferença estatística significativa na severidade da doença em comparação aos outros tratamentos.
+
+**Checagem das premissas:**
+
+Após a realização da anova, partiu-se para a checagem das premissas de normalidade e homocedasticidade das variâncias, as quais foram verificadas com o pacote `performance` por meio da função `ckeck`. A confirmação visual das premissas foi feita por meio do pacote `DHARMa`, o qual utiliza simulação para comparar os resíduos do modelo com uma distribuição de referência considerada ideal.
+
+```{r}
+check_normality(aov_c2)
+check_heteroscedasticity(aov_c2)
+plot(simulateResiduals(aov_c2))
+
+```
+
+Tanto a checagem pelo `performance` quanto a análise visual pelo `DHRAMa` indicaram que ambas as premissas não foram atendidas, demosntrando a necessidade de transformação dos dados.
+
+**Transformação dos dados:** utilizou-se a transformação logarítmica (log + 0.5) nos dados e obteve-se sucesso no atendimento das premissas.
+
+```{r}
+c2$bloco = as.factor(c2$bloco)
+
+aov_c2 <- aov(log(sev + 0.5) ~ trat*tempo_dai + factor(bloco), data = c2)
+
+summary(aov_c2)
+
+check_normality(aov_c2)
+check_heteroscedasticity(aov_c2)
+plot(simulateResiduals(aov_c2))
+
+```
+
+**Teste de Skott-Knott:**
+
+Após a realização da análise de variância demosntrar que há diferença estatística entre os tratamentos e dos dados atenderem as premissas, foi feito o teste de `Scott-Knott` (SK) para comparação e agrupamento das médias. Escolheu-se realizar uma análise de Cluster devido ao número de tratamentos.
+
+O teste de SK classifica as médias dos tratamentos de forma decrescente (da maior para a menor média), fornece um quadro de ANOVA e coeficiente de variação (CV), informa se os dados atendem as premissas de normalidade e homocedasticidade e também determina se as diferenças entre os grupos são estatisticamente significativas. O teste de Scott-Knott foi feito utilizando o pacote `ExpDes.pt`.
+
+```{r}
+c2 <- controle |>
+  filter(tempo_dai == 75) |>
+  filter(sev != "NA")
+
+c2$bloco = as.factor(c2$bloco)
+
+dbc(c2$trat, factor(c2$bloco), c2$sev, quali = (TRUE), mcomp = "sk", sigT = 0.05,sigF = 0.05, unfold = NULL)
+
+```
+
+**Transformação dos dados:** como os dados não atenderam as premissas, foi feita a tranformação logarítmica.
+
+```{r}
+c2$bloco = as.factor(c2$bloco)
+
+dbc(c2$trat, factor(c2$bloco), log(c2$sev + 0.5), quali = (TRUE), mcomp = "sk", sigT = 0.05,sigF = 0.05, unfold = NULL)
+
+```
+
+Pelo teste de Scott-Knott, os tratamentos foram agrupados em 3 grupos estatisticamente distintos - "a", "b", e "c", sendo o grupo "a" formado pelas maiores médias e o "c" pelas menores. Como o interesse do estudo é encontrar os tratamentos que melhor controlam a doença, pela análise da variável resposta severidade, o grupo "c" contém os melhores tratamentos, uma vez que possue a menor média.
+
+### Análise da área abaixo da curva de progresso da doença (AACPD)
+
+A AACPD foi utilizada para quantificar e comparar o progresso da doença nas plantas ao longo do tempo. A AACPD é calculada por meio dos dados de severidade em diferentes tempos então, para esta análise, foram usados todos os tempos de avaliação (30, 45, 60 e 75 dai). Para a análise de AACPD, foi utilizado o pacote `epifitter`.
+
+**Preparação dos dados**: para a realização desta análise, para evitar erros, foi necessário filtrar as células com dados ausentes e também o tempo zero do data frame. Os dados foram agrupados pela variável trat e bloco e, por meio da função `summarise`, a variável `AACPD` foi criada e a área abaixo da curva de progresso da doença (AUPDC) calculada com base nos valores das variáveis tempo (tempo_dai) e severidade (sev).
+
+```{r}
+#| warning: false
+#| message: false
+c3 <- controle |> 
+  filter(sev != "NA") |> 
+  filter(tempo_dai != 0) |> 
+  group_by(trat, bloco) |> 
+  summarise(AACPD = AUDPC(tempo_dai, sev))
+c3
+
+summary(c3$AACPD)
+
+```
+
+**Agrupamento das médias com AACPD:**
+
+```{r}
+c3$bloco = as.factor(c3$bloco)
+
+dbc(c3$trat, factor(c3$bloco), c3$AACPD, quali = (TRUE), mcomp = "sk", sigT = 0.05,sigF = 0.05, unfold = NULL)
+
+```
+
+O teste de Scott-Knott utilizando a variável AACPD, diferente da variável severidade, agrupou os tratamentos em apenas dois grupos estatisticamente diferentes - "a" e "b". Considerando a AACPD, os tratamentos do grupo b apresentam as menores médias, sendo então considerados os melhores tratamentos.
+
+Embora o teste de Scott-Knott tenha conseguindo separar os tratamentos em 3 grupos estatisticamente distintos para a variável resposta severidade e 2 grupos para a AACPD, no quadro de ANOVA fornecido pelo teste SK, é possível ver, na análise de ambas as variáveis, que o valor do CV está muito alto. Como o CV indica a precisão do experimento, quanto maior o seu valor, maior é a heterogeneidade e dispersão dos dados em relação à média, demostrando a que existe uma baixa confiabilidade na estimativa da média.
+
+## Incidência de doença
+
+### Preparo pré-análise
+
+**Importação de dados:** os dados de incidência foram designados ao objeto incid.
+
+```{r}
+incid <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1bw5wWl5dZHis32FU8C60o1xT4HbXqeC9/edit#gid=1007691733")
+head(incid)
+```
+
+**Arrumando os dados:** como o data frame tem mais de uma variável resposta, fez-se necessário selecionar as colunas desejadas para trabalhar nos dados de incidência e também filtrar as células com ausência de dados para evitar erros durante as análises.
+
+```{r}
+inc1 <- incid |>
+ dplyr::select(trat, bloco, inc) |>
+  filter(inc != "NA")
+```
+
+### Análise exploratória dos dados
+
+**Gráfico de colunas:** foi feito a plotagem dos dados em um gráfico de colunas, por meio da função `geom_col`, para ver o comportamento da variável nos diferentes tratamentos.
+
+```{r}
+inc1 |>
+  ggplot(aes(trat, inc))+
+  geom_col(width = .6)+
+  theme_bw()+
+  scale_y_continuous(breaks = seq(0, 100, 10), limits = c(0, 100))
+```
+
+**Gráfico de colunas com média dos dados:** os dados foram agrupados pelos tratamentos (trat) e a média e o desvio padrão da incidência foram calculados. Após isso, foi feita a plotagem do gráfico de colunas novamente com a média dos dados e contendo a barra de erro.
+
+```{r}
+#| warning: false
+#| message: false
+inc2 <- inc1 |>
+  filter(!is.na(inc)) |>
+  group_by(trat) |>
+  summarise(inc_mean = mean(inc),
+            inc_sd = sd(inc))
+  
+inc2 |>
+  ggplot(aes(trat, inc_mean))+
+  geom_col(width = .6)+
+  theme_bw()+
+   geom_errorbar(aes(ymin = inc_mean-inc_sd, ymax = inc_mean+inc_sd), width=0, alpha = 1)+
+  labs(title="", x="Treatments", y = " Incidence (%)")+
+scale_y_continuous(breaks = seq(0, 100, 10), limits = c(0, 100))
+    
+```
+
+### Análise estatística e teste de hipóteses
+
+-   Hipótese nula (H0): a incidência da doença é igual para todos os tratamentos.
+
+-   Hipótese alternativa (Ha): pelo menos um dos tratamentos apresenta uma incidência média menor do que a média dos demais tratamentos.
+
+**ANOVA:**
+
+```{r}
+inc3 <- inc1 |>
+  filter(inc != "NA")
+
+inc3$bloco = as.factor(inc3$bloco)
+
+aov1 <- aov(inc ~ trat + factor(bloco), data = inc3)
+
+summary(aov1)
+```
+
+Baseado nos valores de p (p-valor) na tabela de anova, interpretou-se que, como o valor de p para os tratamentos foram menores que o nível de significância (0,05), deve-se rejeitar a hipótese nula, uma vez que há evidência estatística de que pelo menos um dos tratamentos diferencia-se na incidência da doença em comparação aos demais.
+
+**Checagem das premissas e visualização:**
+
+```{r}
+check_normality(aov1)
+check_heteroscedasticity(aov1)
+plot(simulateResiduals(aov1))
+```
+
+Os dados atenderam a premissa de homocedasticidade, mas não atenderam a normalidade, pela análise do pacote `performance`. Embora isso tenha ocorrido, a visualização gráfica pelo `DHARMa` demonstra que os dados estão normais. Portanto, como visualmente os dados parecem atender às premissas de normalidade e homocedasticidade no `DHARMa`, isso diz que o modelo é apropriado para os dados, mesmo que o pacote `performance` tenha identificado desvios da normalidade. Assim, não é necessário submeter os dados a transformação.
+
+**Agrupamento de médias:**
+
+```{r}
+inc3$bloco = as.factor(inc3$bloco)
+
+dbc(inc3$trat, factor(inc3$bloco), inc3$inc, quali = (TRUE), mcomp = "sk", sigT = 0.05,sigF = 0.05, unfold = NULL)
+```
+
+**Transformação dos dados:** como os dados atenderam a premissa de homocedasticidade, mas não atenderam a premissa de normalidade pelo teste SK, precisou realizar a transformação logarítmica dos dados (log + 0.5).
+
+```{r}
+inc3$bloco = as.factor(inc3$bloco)
+
+dbc(inc3$trat, factor(inc3$bloco), log(inc3$inc + 0.5), quali = (TRUE), mcomp = "sk", sigT = 0.05,sigF = 0.05, unfold = NULL)
+```
+
+Assim como para a variável severidade, os tratamentos foram agrupados em três grupos estatisticamente diferentes - "a", "b" e "c", sendo apenas 2 tratamentos agrupados em "c", com as menores médias e, portanto, considerados os melhores tratamentos.
+
+## Altura de planta
+
+### Preparo pré-análise
+
+**Importação de dados:** os dados foram atribuídos ao objeto altura.
+
+```{r}
+altura <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1bw5wWl5dZHis32FU8C60o1xT4HbXqeC9/edit#gid=1007691733")
+head(altura)
+```
+
+**Arrumando os dados:** como o data frame tem mais de uma variável resposta, fez-se necessário selecionar apenas os dados referentes a altura de plantas e também filtrar as células com ausência de dados no data frame para evitar erros.
+
+```{r}
+alt1 <- altura |>
+ dplyr::select(trat, bloco, alt) |>
+  filter(alt != "NA")
+```
+
+### Análise exploratória dos dados
+
+**Gráfico de colunas:** foi feito a plotagem dos dados em um gráfico de colunas para ver o comportamento da variável nos diferentes tratamentos.
+
+```{r}
+alt1 |>
+  ggplot(aes(trat, alt))+
+  geom_col(width = .6)+
+  theme_bw()+
+  scale_y_continuous(breaks = seq(0, 100, 10), limits = c(0, 100))
+```
+
+**Gráfico de colunas com média dos dados:** os valores ausentes foram filtrados, os dados de incidência agrupados pelos tratamentos (trat) e a média e o desvio padrão da variável resposta foram calculados usando a função `summarise`. Após isso, foi feita a plotagem do gráfico de colunas novamente com a média e realizando a inserção da barra de erro.
+
+```{r}
+alt2 <- alt1 |>
+  filter(!is.na(alt)) |>
+  group_by(trat) |>
+  summarise(alt_mean = mean(alt),
+            alt_sd = sd(alt))
+
+alt2 |>
+  ggplot(aes(trat, alt_mean))+
+  geom_col(width = .6)+
+  theme_bw()+
+  geom_errorbar(aes(ymin = alt_mean-alt_sd, ymax = alt_mean+alt_sd), width=0, alpha = 1)+
+  labs(title="", x="Treatments", y = "Plant height (cm)")+
+scale_y_continuous(breaks = seq(0, 50, 10), limits = c(0, 50))
+```
+
+### Análise estatística e teste de hipóteses
+
+-   Hipótese nula (H0): a altura das plantas é igual para todos os tratamentos.
+
+-   Hipótese alternativa (Ha): pelo menos um dos tratamentos apresenta uma média de altura das plantas menor do que a média dos demais tratamentos.
+
+**ANOVA:**
+
+```{r}
+alt3 <- alt1 |>
+  filter(alt != "NA")
+
+alt3$bloco = as.factor(alt3$bloco)
+
+aov2 <- aov(alt ~ trat + factor(bloco), data = alt3)
+
+summary(aov2)
+```
+
+Com base no resultado da ANOVA, o p-valor para a variável trat é maior que o nível de significância (0,05), o que indica que não há diferença estatistica significativa, portanto, deve-se aceitar a hipótese nula de que a média de altura é igual para todos os tratamentos.
+
+**Checagem das premissas:**
+
+```{r}
+check_normality(aov2)
+check_heteroscedasticity(aov2)
+plot(simulateResiduals(aov2))
+```
+
+Os dados apresentaram-se homocedasticos, porém, não foram considerados normais pela análise do pacote `performance`. Contudo, na análsie gráfica pelo `DHARMa`, os dados atenderam ambas as premissas, assim como no caso da variável resposta incidência, analisada anteriormente, portanto, não é necessário submeter os dados de altura de planta a transformação.
+
+**Agrupamento de medias:**
+
+```{r}
+alt3$bloco = as.factor(alt3$bloco)
+
+dbc(alt3$trat, factor(alt3$bloco), alt3$alt, quali = TRUE, mcomp = "sk", sigT = 0.05)
+```
+
+**Transformação dos dados:** como os dados atenderam a premissa de homocedasticidade, mas não a premissa de normalidade, realizou-se a transformação logarítmica dos dados.
+
+```{r}
+alt3$bloco = as.factor(alt3$bloco)
+
+dbc(alt3$trat, factor(alt3$bloco), log(alt3$alt + 0.5), quali = TRUE, mcomp = "sk", sigT = 0.05)
+```
+
+De acordo com o teste F, realizado dentro do teste SK, as médias dos tratamentos não podem ser consideradas diferentes para a altura de plantas, portanto, não houve agrupamento, já que são estatisticamente iguais.
+
+# Análise de correlação
+
+Como foram obtidas três variáveis respostas, além da AACPD calculada, e estas variáveis foram analisadas separadamente, tentou-se avaliar se essas variáveis estão correlacionadas, se há uma associação entre elas. Por meio da análise de correlação, testou-se a seguinte hipótese:
+
+-   Hipótese nula (H0): não há correlação significativa entre as duas variáveis analisadas.
+
+-   Hipótese alternativa (Ha): há uma correlação significativa entre as duas variáveis analisadas.
+
+## Correlação entre as variáveis severidade e AADPC
+
+**Preparo dos dados:** para realizar a análise de correlação entre essas duas variáveis, primeiramente foi necessário igualar o conjunto de dados de severidade para a mesma quantidade de linhas do conjunto de AACPD. Para esta análise, os dados de severidade foram atríbuidos ao conjunto corsev.
+
+```{r}
+corsev <- controle |> 
+  filter(sev != "NA") |> 
+  group_by(trat, bloco) |> 
+  summarise(sev_mean = mean(sev))
+corsev
+```
+
+**Teste de correlação**: para realizar o teste de correlação, usou-se a função `cor.test`, que é parte do pacote base do R.
+
+```{r}
+cor.test(corsev$sev_mean, c3$AACPD)
+```
+
+O p-valor da análise da relação entre as variáveis foi menor do que o nível de significância (0,05), indicando que a hipótese nula deve ser rejeitada. Aliado a isso, a análise de correlação para as variáveis severidade e AACPD obteve um coeficiente de correlação de Pearson estimado de 0.87, sendo considerada uma correlação positiva e próxima de 1, portanto, uma correlação alta. Isso demonstra que há uma relação forte entre essas duas variáveis e que quanto mais alta a severidade média da doença, maior é a área abaixo da curva de progresso da doença.
+
+**visualização gráfica da correlação**:
+
+```{r}
+plot(corsev$sev_mean, c3$AACPD)
+```
+
+## Correlação entre as variáveis incidência e altura de planta
+
+**Importação dos dados:** O teste de correlação poderia ter sido feito diretamente usando os conjuntos `inc3$inc` e `alt3$alt`, porém, não seria possível visualizar as variáveis graficamente. Então, para visualizar a possibilidade da correlação antes do teste, realizou-se a importação dos dados novamente para se trabalhar com ambas as variáveis em um único conjunto. Estas variáveis foram atríbuidas ao objeto cor.
+
+```{r}
+cor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1bw5wWl5dZHis32FU8C60o1xT4HbXqeC9/edit#gid=1007691733")
+head(cor)
+```
+
+**Visualização e análise exploratória:** plotou-se os dados em um gráfico de dispersão usando a função `geom_point` contendo em sua estética ambas as variáveis resposta. A camada com a função `geom_smooth` foi utilizada para criar uma linha de tendência. Dentro dessa função foi especificado que as barras de erro não serão exibidas no gráfico (se = F") e que o método de regressão linear deve usado para ajustar a linha (method = "lm").
+
+```{r}
+cor |>
+ggplot(aes(inc, alt))+
+  geom_point()+
+  geom_smooth(se = F, method = "lm")+
+  theme_bw()+
+  labs(x = "Disease incidence (%)", y = "Plant height (cm)") +
+  ggtitle("Relationship between disease incidence and plant height")
+```
+
+Baseada apenas na análise visual do gráfico de correlação, é possível prever que, pela direção da linha de melhor ajuste, existe uma correlação negativa entre as variáveis analisadas. A inclinação da linha parece sugerir que essa correlação não é muito forte.
+
+**Teste de correlação:**
+
+```{r}
+cor2 <- cor |>
+  dplyr::select(trat, bloco, inc, alt) |>
+  filter(alt != "NA")
+
+cor.test(cor2$inc, cor2$alt)
+```
+
+O p-valor foi maior do que o nível de significância (0,05), indicando que a hipótese nula deve ser aceita. Comprovando a análise visual, o coeficiente de correlação de Pearson estimado na análise de correlação para as variáveis incidência e altura de planta foi de -0.06082672, um valor negativo e próximo de zero, o que indica que as variáveis estão negativamnete correlacionadas e possuem uma relação fraca. Isso quer dizer que à medida que a incidência aumenta, a altura da planta tende a diminuir.
+
+**Visualização gráfica do resultado da correlação:**
+
+```{r}
+plot(cor2$inc, cor2$alt)
+```
+
+## Correlação entre severidade e altura de planta
+
+**Importação dos dados:** como originalmente as variáveis resposta severidade e altura de planta pertenciam a data frames diferentes, um novo data frame foi feito contendo ambas as variáveis para viabilizar a realização da análise de correlação. Os dados foram atríbuidos ao conjunto sev_cor.
+
+```{r}
+sev_cor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1bw5wWl5dZHis32FU8C60o1xT4HbXqeC9/edit#gid=1796689464")
+head(sev_cor)
+```
+
+**Arrumando os dados:** para que não ocorressem erros durante a análise, os dados foram atríbuidos a um novo objeto chamado `sev_alt`, os dados ausentes foram filtrados e a variável severidade foi transformada de caractere para número por meio da função `mutate`. Após isso, os dados foram plotados em um gráfico de dispersão.
+
+```{r}
+sev_alt <- sev_cor |>
+  filter(alt != "NA") |>
+  mutate(sev_final = as.numeric(sev_final))
+
+sev_alt |>
+  ggplot(aes(sev_final, alt))+
+  geom_point()+
+  geom_smooth(se = F, method = "lm")+
+  theme_bw()
+```
+
+Retendo-se apenas a análise do gráfico, a direção da linha indica a tendência de uma correlação positiva entre as variáveis, mas a inclinação da linha parece demonstrar que essa correlação é fraca.
+
+**Teste de correlação:**
+
+```{r}
+cor.test(sev_alt$sev_final, sev_alt$alt)
+```
+
+O valor de p (0.2673) é maior que o nível de significância comumente adotado (0, 05), o que sugere que não há uma correlação estatisticamente significativa entre as variáveis. Além disso, o coeficiente de correlação de Pearson foi de 0.06616037, um valor próximo de zero, indicando uma correlação fraca ou inexistente entre as variáveis severidade e altura de planta.
+
+**Visualização gráfica do resultado da correlação:**
+
+```{r}
+plot(sev_alt$sev_final, sev_alt$alt)
+```
+
+# Análise de Regressão
+
+A análise de regressão linear foi realizada no intuíto de identificar e quantificar a relação entre as variáveis. Na análise de regressão, testou-se a hipótese nula de que não há relação entre a variável independente e a variável dependente. A hipótese alternativa é que há uma relação entre a variável independente e a variável dependente.
+
+## Efeito da severidade na altura de planta
+
+Realizamos uma análise de regressão para saber se a altura da planta tem relação com a severidade da doença, ou seja, se a variável altura de planta é dependente da severidade. Nesse caso, utilizaremos os valores da severidade final.
+
+**Visualização e análise exploratória:**
+
+```{r}
+sev_alt |>
+  ggplot(aes(alt,sev_final, color = trat))+
+  geom_point()+
+  geom_smooth(method ="lm", se =F)
+```
+
+**Teste:** o teste de regressão foi realizado utilizando a função `lm`, que faz parte do pacote base do R. A função `summary` foi usada para gerar um quadro de resumo com o resultado do teste.
+
+```{r}
+reg <- lm(alt ~ sev_final, data = sev_alt)
+
+summary(reg)
+```
+
+A análise de regressão indica que a severidade final não tem um efeito estatisticamente significativo na altura das plantas. O p-valor da variável severidade final é de 0.267, o que mostra a falta de evidências estatisticamente significativas de uma relação linear entre as variáveis. Aliado a isso, o valor do coeficiente de determinação (R²), que indica quanto a variável resposta altura de planta é explicada pela variável severidade final, deu muito baixo (0.004377).
+
+# Conclusão
+
+Considerando os agrupamentos de média dos tratamentos para a variável resposta severidade, os melhores tratamentos no controle da doença (menores médias) foram: M442, M121, M267, 64, 78, E414 e E48. Já para a incidência, apenas dois tratamentos apresentaram as menores médias. Pela AACPD, mais de 8 tratamentos foram considerados estatísticamente iguais e agrupados como tendo as menores médias dentre eles, a amioria dos considerados melhores baseado na severidade: 64, M442, M121, E486, M267, E174, E414 e E48. Diante dos resultados obtidos, conclui-se que os dados são inconclusivos e não possuem confiabilidade suficiente, uma vez que apresentam um alto coeficiente de variação e desvio padrão para a principal variável resposta analisada, fazendo com que haja uma alta variabilidasde entre os blocos. Recomenda-se a repetição do experimento utilizando um maior número de repetições para reduzir o CV e o erro experiemetal. Para isso, os melhores tratamentos devem ser selecionados e testados.
