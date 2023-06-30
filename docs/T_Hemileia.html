@@ -354,8 +354,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><img src="T_Hemileia_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p><strong>Visualizando o avanço da severidade ao longo do tempo:</strong> baseado no gráfico anterior, foi feito uma animação do avanço da severidade da doença para cada tratamento conforme a realização das avaliações no experimento.</p>
-<div class="cell" data-hash="T_Hemileia_cache/html/unnamed-chunk-5_c4f99082812d7f744f1d28b0f75272c6">
+<p><strong>Visualizando o avanço da severidade ao longo do tempo:</strong> baseado no gráfico anterior, foi feito uma animação do avanço da severidade da doença para cada tratamento conforme a realização das avaliações no experimento. Para isso, animamos o gráfico no eixo x com a variável <code>tempo_dai</code> utilizando a função <code>transaction_reveal</code>, do pacote <code>gganimate</code>. Este pacote estende o pacote <code>ggplot2</code> e implementa algumas funções para animar gráficos que normalmente seriam estáticos. A animação foi salva usando a função <code>anim_save</code> e definindo a pasta de destino, o nome e formato do arquivo.</p>
+<div class="cell" data-hash="T_Hemileia_cache/html/unnamed-chunk-5_1b09d1761ac642c744d5db20fcf1c396">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>gif <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(controle2, <span class="fu">aes</span>(tempo_dai, sev_mean,</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">color =</span> trat))<span class="sc">+</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> trat, <span class="at">color =</span> trat), <span class="at">size =</span> <span class="dv">1</span>)<span class="sc">+</span></span>
@@ -373,7 +373,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#| warning: false</span></span>
 <span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#| message: false</span></span>
 <span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>gif_sev<span class="ot">=</span> gif <span class="sc">+</span> <span class="fu">transition_reveal</span>(tempo_dai)</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="fu">animate</span>(gif_sev, <span class="at">height =</span> <span class="dv">600</span>, <span class="at">width =</span> <span class="dv">600</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="fu">animate</span>(gif_sev)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="T_Hemileia_files/figure-html/unnamed-chunk-5-1.gif" class="img-fluid"></p>
 </div>

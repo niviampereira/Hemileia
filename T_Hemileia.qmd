@@ -95,7 +95,9 @@ controle2 |>
 scale_y_continuous(breaks = seq(0, 25, 5), limits = c(0, 25))+
 scale_x_continuous(breaks = seq(0, 75, 15), limits = c(0, 75))
 ```
+
 **Visualizando o avanço da severidade ao longo do tempo:** baseado no gráfico anterior, foi feito uma animação do avanço da severidade da doença para cada tratamento conforme a realização das avaliações no experimento. Para isso, animamos o gráfico no eixo x com a variável `tempo_dai` utilizando a função `transaction_reveal`, do pacote `gganimate`. Este pacote estende o pacote `ggplot2` e implementa algumas funções para animar gráficos que normalmente seriam estáticos. A animação foi salva usando a função `anim_save` e definindo a pasta de destino, o nome e formato do arquivo.
+
 ```{r}
 #| warning: false
 #| message: false
