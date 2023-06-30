@@ -11,7 +11,7 @@ O banco de dados analisado traz os resultados de um experimento realizado com tr
 
 # Objetivo e hipóteses
 
-Por meio da análise dos dados, objetivou-se determinar quais tratamentos testados para controle biológico de *H. vastatrix* apresentam o melhor desempenho no controle da doença, considerando as variáveis resposta severidade, incidência e altura de plantas. 
+Por meio da análise dos dados, objetivou-se determinar quais tratamentos testados para controle biológico de *H. vastatrix* apresentam o melhor desempenho no controle da doença, considerando as variáveis resposta severidade, incidência e altura de plantas.
 
 ## Hipóteses testadas
 
@@ -37,13 +37,16 @@ library(googlesheets4)
 library(gsheet)
 library(dplyr)
 library(ggplot2)
+library(gganimate)
+library(animate)
+library(gifski)
 library(performance)
 library(DHARMa)
 library(ExpDes.pt)
 library(epifitter)
 ```
 
-**Importação dos dados:** como o data frame contendo os dados de severidade estão localizados em uma uma planilha do Google Sheets, para realizar a importação dos dados necessitou-se utilizar a função `gsheet2tbl` do pacote `googlesheets4`. O data frame foi atribuído ao objeto denominado `controle`. 
+**Importação dos dados:** como o data frame contendo os dados de severidade estão localizados em uma uma planilha do Google Sheets, para realizar a importação dos dados necessitou-se utilizar a função `gsheet2tbl` do pacote `googlesheets4`. O data frame foi atribuído ao objeto denominado `controle`.
 
 ```{r}
 controle <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1bw5wWl5dZHis32FU8C60o1xT4HbXqeC9/edit#gid=2004591437")
@@ -91,6 +94,30 @@ controle2 |>
   labs(title="", x="Time (days after inoculation)", y = "Disease severity (%)", color = "Treatments", fill = "Treatments")+
 scale_y_continuous(breaks = seq(0, 25, 5), limits = c(0, 25))+
 scale_x_continuous(breaks = seq(0, 75, 15), limits = c(0, 75))
+```
+**Visualizando o avanço da severidade ao longo do tempo:** baseado no gráfico anterior, foi feito uma animação do avanço da severidade da doença para cada tratamento conforme a realização das avaliações no experimento. Para isso, animamos o gráfico no eixo x com a variável `tempo_dai` utilizando a função `transaction_reveal`, do pacote `gganimate`. Este pacote estende o pacote `ggplot2` e implementa algumas funções para animar gráficos que normalmente seriam estáticos. A animação foi salva usando a função `anim_save` e definindo a pasta de destino, o nome e formato do arquivo.
+```{r}
+#| warning: false
+#| message: false
+gif <- ggplot(controle2, aes(tempo_dai, sev_mean,
+             color = trat))+
+  geom_line(aes(group = trat, color = trat), size = 1)+
+  geom_point(aes(fill = trat), shape = 21, size = 2)+
+  scale_color_viridis_d(option = "D")+
+  scale_fill_viridis_d(option = "D")+
+  theme_bw()+
+  labs(title="", x="Time (days after inoculation)", y = "Disease severity (%)")+
+scale_y_continuous(breaks = seq(0, 25, 5), limits = c(0, 25))+
+scale_x_continuous(breaks = seq(0, 75, 15), limits = c(0, 75))
+
+#| warning: false
+#| message: false
+gif + transition_reveal(tempo_dai)
+#| warning: false
+#| message: false
+gif_sev= gif + transition_reveal(tempo_dai)
+animate(gif_sev)
+anim_save("imgs/gif_sev.gif")
 ```
 
 **Adição de facetas:** para visualizar separadamente os tratamentos, realizamos a adição de facetas com a função `facet_wrap`.
@@ -584,7 +611,7 @@ plot(corsev$sev_mean, c3$AACPD)
 
 ## Correlação entre incidência e altura de planta
 
-**Importação dos dados:** O teste de correlação poderia ter sido feito diretamente usando os conjuntos `inc3$inc` e `alt3$alt`, porém, não seria possível visualizar as variáveis graficamente. Então, para visualizar a possibilidade da correlação antes do teste, realizou-se a importação dos dados novamente para se trabalhar com ambas as variáveis em um único conjunto. Estas variáveis foram atríbuidas ao objeto `cor`. A função `head` foi utilizada para chamar as primeiras linhas do conjunto de dados e confirmar que os dados foram carregados de forma correta. 
+**Importação dos dados:** O teste de correlação poderia ter sido feito diretamente usando os conjuntos `inc3$inc` e `alt3$alt`, porém, não seria possível visualizar as variáveis graficamente. Então, para visualizar a possibilidade da correlação antes do teste, realizou-se a importação dos dados novamente para se trabalhar com ambas as variáveis em um único conjunto. Estas variáveis foram atríbuidas ao objeto `cor`. A função `head` foi utilizada para chamar as primeiras linhas do conjunto de dados e confirmar que os dados foram carregados de forma correta.
 
 ```{r}
 cor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1bw5wWl5dZHis32FU8C60o1xT4HbXqeC9/edit#gid=1007691733")

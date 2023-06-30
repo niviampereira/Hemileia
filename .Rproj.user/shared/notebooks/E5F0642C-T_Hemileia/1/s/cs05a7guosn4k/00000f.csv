@@ -1,8 +1,0 @@
-"0","#| warning: false"
-"0","#| message: false"
-"0","c3 <- controle |> "
-"0","  filter(sev != ""NA"") |> "
-"0","  filter(tempo_dai != 0) |> "
-"0","  group_by(trat, bloco) |> "
-"0","  summarise(AACPD = AUDPC(tempo_dai, sev))"
-"0","c3"
