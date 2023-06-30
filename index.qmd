@@ -1,20 +1,9 @@
+# Teste de biocontrole da ferrugem do cafeeiro por fungos antagonistas a *Hemileia vastatrix*
 
+Este site foi criado para abrigar as informações referentes a análise dos dados sobre biocontrole da ferrugem do café, realizada para o trabalho final da disciplina **FIP 606** -- **Análise e visualização de dados em Fitopatologia**, ministrada pelo professor [Emerson Del Ponte](https://emersondelponte.netlify.app/).
 
-# Sobre
+A análise dos dados fornece um resumo dos efeitos de diferentes isolados fúngicos antagonistas sobre a ferrugem do cafeeiro (causada por *Hemileia vastatrix*).
 
-<img src = "imgs/ferrugem.png" width=300 height = 300 align = right>
-Este site foi criado para abrigar as informações referentes a análise dos dados sobre biocontrole da ferrugem do café, realizada para o trabalho final da disciplina **FIP 606** -- **Análise e visualização de dados em Fitopatologia**, ministrada pelo professor Emerson Del Ponte.
-
-
-A análise dos dados fornece um resumo dos efeitos de diferentes isolados fúngicos antagonistas sobre a ferrugem do caffeiro (causada por *Hemileia vastatrix*).
-
-
-
-
-
-
-
-
-
+![](imgs/ferrugemcafe.jpg){fig-align="center" width="800"}
 
 Detentor dos dados analisados: Caio Mattos Pereira
