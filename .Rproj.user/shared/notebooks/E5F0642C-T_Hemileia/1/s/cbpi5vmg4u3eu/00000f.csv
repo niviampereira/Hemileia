@@ -1,8 +1,0 @@
-"0","check_normality(aov2)"
-"1","[31mWarning: Non-normality of residuals detected (p = 0.015).
-[39m"
-"0","check_heteroscedasticity(aov2)"
-"1","[32mOK: Error variance appears to be homoscedastic (p = 0.812).
-[39m"
-"0","plot(simulateResiduals(aov2))"
-"2","Warning: DHARMa: fittedModel not in class of supported models. Absolutely no guarantee that this will work!"
