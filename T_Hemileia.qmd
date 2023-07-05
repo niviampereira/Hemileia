@@ -409,36 +409,30 @@ inc3$bloco = as.factor(inc3$bloco)
 dbc(inc3$trat, factor(inc3$bloco), inc3$inc, quali = (TRUE), mcomp = "sk", sigT = 0.05,sigF = 0.05, unfold = NULL)
 ```
 
-**Transformação dos dados:** como os dados atenderam a premissa de homocedasticidade, mas não atenderam a premissa de normalidade pelo teste SK, precisou realizar a transformação logarítmica dos dados (log + 0.5).
-
-```{r}
-inc3$bloco = as.factor(inc3$bloco)
-
-dbc(inc3$trat, factor(inc3$bloco), log(inc3$inc + 0.5), quali = (TRUE), mcomp = "sk", sigT = 0.05,sigF = 0.05, unfold = NULL)
-```
-
-Assim como para a variável severidade, os tratamentos foram agrupados em três grupos estatisticamente diferentes - "a", "b" e "c", sendo apenas 2 tratamentos agrupados em "c" com as menores médias e, portanto, considerados os melhores tratamentos.
+Para a variável incidência, os tratamentos foram agrupados em quatro grupos estatisticamente diferentes - "a", "b", "c" e "d", sendo 4 tratamentos agrupados em "d" com as menores médias e, portanto, considerados os melhores tratamentos.
 
 **Visualização dos agrupamentos em boxplot**:
 
 ```{r}
 inc3 <- inc3 |>
   mutate(grupo = case_when(
-    trat %in% c("AT", "HI", "297", "290", "58", "Mix") ~ "Group A",
-    trat %in% c("BI","ADJ", "E486", "E585", "E174", "M230", "M442", "M121", "64", "78", "E414") ~ "Group B",
-    trat %in% c("M267", "E48") ~ "Group C"))
+    trat %in% c("AT", "297", "HI") ~ "Group A",
+    trat %in% c("290", "Mix", "BI", "58") ~ "Group B",
+    trat %in% c("ADJ", "E585", "E174", "M230", "M121", "64", "78", "E414") ~ "Group C",
+    trat %in% c("E486", "M442", "M267", "E48") ~ "Group D"))
 
-# Gráfico boxplot da resposta severidade, coloridos por grupos:
 
-ggplot(c2, aes(trat, sev, fill = grupo)) +
+# Gráfico boxplot da resposta incidência, coloridos por grupos:
+
+ggplot(inc3, aes(trat, inc, fill = grupo)) +
   geom_boxplot() +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_x_discrete(limits = c("AT", "HI", "BI", "297", "58", "290", "ADJ", "E486", "E585", "E174", "M230", "Mix", "M442", "M121", "M267", "64", "78", "E414", "E48")) +
+  scale_x_discrete(limits = c("AT", "297", "HI", "290", "Mix", "BI", "58", "ADJ", "E585", "E174", "M230", "M121", "64", "78", "E414", "E486", "M442", "M267", "E48")) +
   labs(x = "Treatments") +
   labs(y = "Incidence (%)") +
-  scale_y_continuous(breaks = seq(0, 100, 10), limits = c(-20, 50)) +
-  scale_fill_manual(values = c("Group A" = "#af8dc3", "Group B" = "#67a9cf", "Group C" = "#99d594"), name = "Treatments groups")
+  scale_y_continuous(breaks = seq(0, 100, 10), limits = c(0, 100)) +
+  scale_fill_manual(values = c("Group A" = "#af8dc3", "Group B" = "#67a9cf", "Group C" = "#ffd966", "Group D" = "#99d594"), name = "Treatments groups")
 
 ```
 
@@ -539,14 +533,6 @@ alt3$bloco = as.factor(alt3$bloco)
 dbc(alt3$trat, factor(alt3$bloco), alt3$alt, quali = TRUE, mcomp = "sk", sigT = 0.05)
 ```
 
-**Transformação dos dados:** como os dados atenderam a premissa de homocedasticidade, mas não a premissa de normalidade, realizou-se a transformação logarítmica dos dados.
-
-```{r}
-alt3$bloco = as.factor(alt3$bloco)
-
-dbc(alt3$trat, factor(alt3$bloco), log(alt3$alt + 0.5), quali = TRUE, mcomp = "sk", sigT = 0.05)
-```
-
 De acordo com o teste F, realizado dentro do teste SK, as médias dos tratamentos não podem ser consideradas diferentes para a altura de plantas, portanto, não houve agrupamento, já que são estatisticamente iguais.
 
 **Tabela de médias pelo teste Scott-Knott**
@@ -555,25 +541,25 @@ Médias de 19 tratamentos testados para controle da ferrugem do café para 3 var
 
 | Tratamentos | Severidade  | AACPD     | Incidência |
 |-------------|-------------|-----------|------------|
-| 58          | 1.2149423 b | 94.950 b  | 4.202431 a |
-| 64          | 0.5988305 c | 64.425 b  | 4.063330 b |
-| 78          | 0.5688595 c | 82.350 b  | 4.032324 b |
-| 290         | 1.1440346 b | 113.225 b | 4.303842 a |
-| 297         | 1.2878112 b | 251.250 a | 4.377435 a |
-| E48         | 0.3740960 c | 12.025 b  | 3.688126 c |
-| E174        | 0.9069136 b | 43.975 b  | 4.034805 b |
-| E414        | 0.3786039 c | 38.725 b  | 4.050855 b |
-| E486        | 1.0184742 b | 52.575 b  | 3.926587 b |
-| E585        | 0.9342449 b | 107.075 b | 4.090761 b |
-| M121        | 0.7138208 c | 59.800 b  | 4.026069 b |
-| M230        | 0.8677099 b | 103.850 b | 4.026069 b |
-| M267        | 0.6545537 c | 48.325 b  | 3.702856 c |
-| M442        | 0.7207828 c | 63.025 b  | 3.897683 b |
-| ADJ         | 1.0217011 b | 104.850 b | 4.115889 b |
-| AT          | 2.1292877 a | 261.425 a | 4.426526 a |
-| BI          | 1.6465584 a | 220.575 a | 4.114462 b |
-| HI          | 1.9219884 a | 134.650 b | 4.348190 a |
-| Mix         | 0.8643519 b | 65.500 b  | 4.229844 a |
+| 58          | 1.2149423 b | 94.950 b  | 68.16800 b |
+| 64          | 0.5988305 c | 64.425 b  | 61.13500 c |
+| 78          | 0.5688595 c | 82.350 b  | 61.53867 c |
+| 290         | 1.1440346 b | 113.225 b | 74.42267 b |
+| 297         | 1.2878112 b | 251.250 a | 80.26267 a |
+| E48         | 0.3740960 c | 12.025 b  | 42.65067 d |
+| E174        | 0.9069136 b | 43.975 b  | 58.91200 c |
+| E414        | 0.3786039 c | 38.725 b  | 59.56200 c |
+| E486        | 1.0184742 b | 52.575 b  | 53.57067 d |
+| E585        | 0.9342449 b | 107.075 b | 61.55133 c |
+| M121        | 0.7138208 c | 59.800 b  | 58.50133 c |
+| M230        | 0.8677099 b | 103.850 b | 55.36133 c |
+| M267        | 0.6545537 c | 48.325 b  | 48.14707 d |
+| M442        | 0.7207828 c | 63.025 b  | 50.78800 d |
+| ADJ         | 1.0217011 b | 104.850 b | 64.15667 c |
+| AT          | 2.1292877 a | 261.425 a | 84.50867 a |
+| BI          | 1.6465584 a | 220.575 a | 68.67936 b |
+| HI          | 1.9219884 a | 134.650 b | 79.55800 a |
+| Mix         | 0.8643519 b | 65.500 b  | 70.26867 b |
 
 \*Médias seguidas pela mesma letra, na mesma coluna, pertencem a um mesmo grupo (Scott-Knott). Médias transformadas (log) das variáveis severidade e incidência.
 
@@ -721,6 +707,6 @@ A análise de regressão indica que a severidade final não tem um efeito estati
 
 # Conclusão
 
-Considerando os agrupamentos de média dos tratamentos para a variável resposta severidade, os melhores tratamentos no controle da doença (menores médias) foram: M442, M121, M267, 64, 78, E414 e E48. Já para a incidência, apenas dois tratamentos apresentaram as menores médias. Pela AACPD, mais de 8 tratamentos foram considerados estatísticamente iguais e agrupados como tendo as menores médias dentre eles, a a maioria dos considerados melhores baseado na severidade: 64, M442, M121, E486, M267, E174, E414 e E48.
+Considerando os agrupamentos de média dos tratamentos para a variável resposta severidade, os melhores tratamentos no controle da doença (menores médias) foram: M442, M121, M267, 64, 78, E414 e E48. Já para a incidência, apenas quatro tratamentos apresentaram as menores médias - M442, E486, M267 e E48. Pela AACPD, mais de 8 tratamentos foram considerados estatísticamente iguais e agrupados como tendo as menores médias dentre eles, a a maioria dos considerados melhores baseado na severidade: 64, M442, M121, E486, M267, E174, E414 e E48.
 
 Diante dos resultados obtidos, conclui-se que os dados são inconclusivos e não possuem confiabilidade suficiente, uma vez que apresentam um alto coeficiente de variação e desvio padrão para a principal variável resposta analisada, fazendo com que haja uma alta variabilidasde entre os blocos. Recomenda-se a repetição do experimento utilizando um maior número de repetições para reduzir o CV e o erro experimetal. Os resultados obtidos nestas análises podem ser úteis para a exclusão dos piores tratamentos testados e seleção dos melhores tratamentos para novos experimentos.

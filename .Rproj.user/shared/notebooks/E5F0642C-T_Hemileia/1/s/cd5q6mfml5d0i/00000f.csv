@@ -1,0 +1,5 @@
+"0","inc1 |>"
+"0","  ggplot(aes(reorder(trat, inc), inc))+"
+"0","  geom_boxplot()+"
+"0","  theme_bw()+"
+"0","  scale_y_continuous(breaks = seq(0, 100, 10), limits = c(0, 100))"

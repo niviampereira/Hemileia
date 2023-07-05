@@ -1,0 +1,3 @@
+"0","inc1 <- incid |>"
+"0"," dplyr::select(trat, bloco, inc) |>"
+"0","  filter(inc != ""NA"")"

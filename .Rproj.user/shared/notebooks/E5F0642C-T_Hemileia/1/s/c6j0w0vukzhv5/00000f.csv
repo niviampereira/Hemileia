@@ -1,0 +1,3 @@
+"0","alt1 <- altura |>"
+"0"," dplyr::select(trat, bloco, alt) |>"
+"0","  filter(alt != ""NA"")"
