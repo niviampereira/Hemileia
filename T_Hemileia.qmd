@@ -561,7 +561,7 @@ Médias de 19 tratamentos testados para controle da ferrugem do café para 3 var
 | HI          | 1.9219884 a | 134.650 b | 79.55800 a |
 | Mix         | 0.8643519 b | 65.500 b  | 70.26867 b |
 
-\*Médias seguidas pela mesma letra, na mesma coluna, pertencem a um mesmo grupo (Scott-Knott). Médias transformadas (log) das variáveis severidade e incidência.
+\*Médias seguidas pela mesma letra, na mesma coluna, pertencem a um mesmo grupo (Scott-Knott). Médias transformadas (log) da variável severidade.
 
 # Análise de Correlação
 
